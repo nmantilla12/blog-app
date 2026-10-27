@@ -28,10 +28,26 @@ const initialBlogs: Blog[] = [
   }
 ]
 
+// Obtener todos los blogs
 export const getBlogs = async (): Promise<Blog[]> => {
   return initialBlogs
 }
 
+// Buscar un blog por ID
+export const getBlogById = async (id: string): Promise<Blog | undefined> => {
+  return initialBlogs.find((blog) => blog.id === id)
+}
+
+// Incrementar los likes de un blog
+export const likeBlog = (id: string) => {
+  const blog = initialBlogs.find((b) => b.id === id)
+  if (blog) {
+    blog.likes += 1
+  }
+  return blog
+}
+
+// Server Action para crear un blog
 export async function createBlog(formData: FormData) {
   const title = formData.get('title') as string
   const author = formData.get('author') as string
@@ -53,4 +69,13 @@ export async function createBlog(formData: FormData) {
 
   revalidatePath('/blogs')
   redirect('/blogs')
+}
+
+// Server Action para procesar el "Me gusta"
+export async function handleLikeBlog(formData: FormData) {
+  const id = formData.get('id') as string
+  likeBlog(id)
+
+  revalidatePath(`/blogs/${id}`)
+  revalidatePath('/blogs')
 }
