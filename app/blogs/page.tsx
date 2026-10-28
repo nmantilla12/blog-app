@@ -4,16 +4,22 @@ import Link from "next/link"
 export default async function BlogsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ popular?: string }>
+  searchParams: Promise<{ filter?: string }>
 }) {
   const resolvedSearchParams = await searchParams
-  const isPopular = resolvedSearchParams.popular === "true"
+  const filter = resolvedSearchParams.filter || ""
 
   const blogs = await getBlogs()
 
-  const blogsToShow = isPopular
-    ? blogs.filter((blog) => blog.likes > 20)
+  // 1. Filtrar por título si se escribe algo en el buscador (Ejercicio 6: Search)
+  const filteredBlogs = filter
+    ? blogs.filter((blog) =>
+        blog.title.toLowerCase().includes(filter.toLowerCase())
+      )
     : blogs
+
+  // 2. Ordenar de mayor a menor número de likes (Ejercicio 5: Rendered in order)
+  const sortedBlogs = [...filteredBlogs].sort((a, b) => b.likes - a.likes)
 
   return (
     <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
@@ -25,24 +31,23 @@ export default async function BlogsPage({
 
       <h1>Blogs</h1>
 
-      <div style={{ marginBottom: "20px" }}>
-        <Link
-          href={isPopular ? "/blogs" : "/blogs?popular=true"}
-          style={{
-            padding: "8px 12px",
-            backgroundColor: "#0070f3",
-            color: "white",
-            textDecoration: "none",
-            borderRadius: "4px",
-            display: "inline-block"
-          }}
-        >
-          {isPopular ? "Mostrar todos" : "Mostrar populares (>20 likes)"}
-        </Link>
-      </div>
+      {/* Formulario de búsqueda en la URL */}
+      <form method="GET" style={{ marginBottom: "20px" }}>
+        <input
+          type="text"
+          name="filter"
+          defaultValue={filter}
+          placeholder="Buscar por título..."
+          style={{ padding: "8px", marginRight: "8px", width: "250px" }}
+        />
+        <button type="submit" style={{ padding: "8px 16px", cursor: "pointer" }}>
+          Buscar
+        </button>
+      </form>
 
+      {/* Lista de blogs ordenados y filtrados */}
       <ul style={{ listStyle: "none", padding: 0 }}>
-        {blogsToShow.map((blog) => (
+        {sortedBlogs.map((blog) => (
           <li
             key={blog.id}
             style={{
