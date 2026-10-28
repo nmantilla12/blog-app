@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
     agentFeedback: true,
-    partialPrefetching: true,
   },
   turbopack: {
     rules: {
