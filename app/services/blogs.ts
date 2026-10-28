@@ -1,3 +1,8 @@
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+
 export interface Blog {
   id: string
   title: string
@@ -25,4 +30,47 @@ const initialBlogs: Blog[] = [
 
 export const getBlogs = async (): Promise<Blog[]> => {
   return initialBlogs
+}
+
+export const getBlogById = async (id: string): Promise<Blog | undefined> => {
+  return initialBlogs.find((blog) => blog.id === id)
+}
+
+export const likeBlog = async (id: string) => {
+  const blog = initialBlogs.find((b) => b.id === id)
+  if (blog) {
+    blog.likes += 1
+  }
+  return blog
+}
+
+export async function createBlog(formData: FormData) {
+  const title = formData.get('title') as string
+  const author = formData.get('author') as string
+  const url = formData.get('url') as string
+
+  if (!title || !author || !url) {
+    return
+  }
+
+  const newBlog: Blog = {
+    id: String(Date.now()),
+    title,
+    author,
+    url,
+    likes: 0
+  }
+
+  initialBlogs.push(newBlog)
+
+  revalidatePath('/blogs')
+  redirect('/blogs')
+}
+
+export async function handleLikeBlog(formData: FormData) {
+  const id = formData.get('id') as string
+  await likeBlog(id)
+
+  revalidatePath(`/blogs/${id}`)
+  revalidatePath('/blogs')
 }
