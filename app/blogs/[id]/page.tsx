@@ -1,40 +1,59 @@
-import { notFound } from "next/navigation"
 import { getBlogById, handleLikeBlog } from "@/app/services/blogs"
+import Link from "next/link"
 
-interface PageProps {
+export default async function BlogDetailPage({
+  params,
+}: {
   params: Promise<{ id: string }>
-}
-
-export default async function BlogDetailPage({ params }: PageProps) {
+}) {
   const { id } = await params
   const blog = await getBlogById(id)
 
   if (!blog) {
-    notFound()
+    return (
+      <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
+        <h2>Blog no encontrado</h2>
+        <Link href="/blogs">← Volver a la lista</Link>
+      </div>
+    )
   }
 
   return (
     <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
-      <h2>{blog.title}</h2>
+      <Link href="/blogs" style={{ color: "#0070f3", textDecoration: "none" }}>
+        ← Volver a la lista de blogs
+      </Link>
+      
+      <h1 style={{ marginTop: "20px" }}>{blog.title}</h1>
+      <p><strong>Autor:</strong> {blog.author}</p>
       <p>
-        <strong>Autor:</strong> {blog.author}
-      </p>
-      <p>
-        <strong>URL:</strong>{" "}
+        <strong>URL Original:</strong>{" "}
         <a href={blog.url} target="_blank" rel="noopener noreferrer">
           {blog.url}
         </a>
       </p>
-      <p>
-        <strong>Me gusta:</strong> {blog.likes}
-      </p>
-
-      <form action={handleLikeBlog}>
-        <input type="hidden" name="id" value={blog.id} />
-        <button type="submit" style={{ padding: "8px 16px", cursor: "pointer" }}>
-          👍 Dar Me gusta
-        </button>
-      </form>
+      
+      <div style={{ margin: "20px 0", padding: "15px", background: "#f5f5f5", borderRadius: "5px", color: "#333" }}>
+        <p><strong>Me gusta actuales:</strong> {blog.likes}</p>
+        
+        <form action={handleLikeBlog}>
+          <input type="hidden" name="id" value={blog.id} />
+          <button
+            type="submit"
+            style={{
+              padding: "10px 15px",
+              backgroundColor: "#0070f3",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              cursor: "pointer",
+              fontSize: "16px"
+            }}
+          >
+            👍 Dar Me gusta
+          </button>
+        </form>
+      </div>
     </div>
   )
 }
