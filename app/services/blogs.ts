@@ -2,75 +2,38 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { db } from '@/app/db'
+import { notes } from '@/app/db/schema'
 
-export interface Blog {
-  id: string
-  title: string
-  author: string
-  url: string
-  likes: number
+// 1. Tipado que refleja la tabla de la base de datos
+export interface Note {
+  id: number
+  content: string
+  important: boolean
 }
 
-const initialBlogs: Blog[] = [
-  {
-    id: '1',
-    title: 'Componentes de Servidor en React',
-    author: 'Dan Abramov',
-    url: 'https://react.dev/blog/2023/03/22/react-labs-what-we-have-been-working-on-march-2023',
-    likes: 12
-  },
-  {
-    id: '2',
-    title: 'Primeros pasos con Next.js App Router',
-    author: 'Vercel Team',
-    url: 'https://nextjs.org/blog/next-13-4',
-    likes: 25
-  }
-]
-
-export const getBlogs = async (): Promise<Blog[]> => {
-  return initialBlogs
+// 2. Obtener todas las notas de la base de datos
+export const getBlogs = async (): Promise<Note[]> => {
+  const allNotes = await db.select().from(notes)
+  return allNotes
 }
 
-export const getBlogById = async (id: string): Promise<Blog | undefined> => {
-  return initialBlogs.find((blog) => blog.id === id)
-}
-
-export const likeBlog = async (id: string) => {
-  const blog = initialBlogs.find((b) => b.id === id)
-  if (blog) {
-    blog.likes += 1
-  }
-  return blog
-}
-
+// 3. Crear una nueva nota en la base de datos
 export async function createBlog(formData: FormData) {
-  const title = formData.get('title') as string
-  const author = formData.get('author') as string
-  const url = formData.get('url') as string
+  const content = formData.get('content') as string
+  const important = formData.get('important') === 'true'
 
-  if (!title || !author || !url) {
+  if (!content) {
     return
   }
 
-  const newBlog: Blog = {
-    id: String(Date.now()),
-    title,
-    author,
-    url,
-    likes: 0
-  }
+  // Insertamos en la tabla de Postgres a través de Drizzle
+  await db.insert(notes).values({
+    content,
+    important,
+  })
 
-  initialBlogs.push(newBlog)
-
+  // Revalidamos la ruta para que Next.js actualice la lista y redirigimos
   revalidatePath('/blogs')
   redirect('/blogs')
-}
-
-export async function handleLikeBlog(formData: FormData) {
-  const id = formData.get('id') as string
-  await likeBlog(id)
-
-  revalidatePath(`/blogs/${id}`)
-  revalidatePath('/blogs')
 }

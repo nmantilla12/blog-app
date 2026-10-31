@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1793284418519,
+      "tag": "0000_workable_gamma_corps",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793478500103,
+      "tag": "0001_secret_cable",
+      "breakpoints": true
+    }
+  ]
+}

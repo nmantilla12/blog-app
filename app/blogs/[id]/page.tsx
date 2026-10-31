@@ -1,4 +1,4 @@
-import { getBlogById, handleLikeBlog } from "@/app/services/blogs"
+import { getBlogById, toggleBlogImportance } from "@/app/services/blogs"
 import Link from "next/link"
 
 export const dynamic = 'force-dynamic'
@@ -9,37 +9,38 @@ export default async function BlogDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const blog = await getBlogById(id)
+  const blog = await getBlogById(Number(id))
 
   if (!blog) {
     return (
-      <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
+      <div style={{ padding: "20px", fontFamily: "sans-serif", color: "#fff" }}>
         <h2>Blog no encontrado</h2>
         <Link href="/blogs">← Volver a la lista</Link>
       </div>
     )
   }
 
+  const blogId = blog.id
+
+  async function handleToggle() {
+    'use server'
+    await toggleBlogImportance(blogId)
+  }
+
   return (
-    <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
-      <Link href="/blogs" style={{ color: "#0070f3", textDecoration: "none" }}>
+    <div style={{ padding: "20px", fontFamily: "sans-serif", color: "#fff" }}>
+      <Link href="/blogs" style={{ color: "#61dafb", textDecoration: "none" }}>
         ← Volver a la lista de blogs
       </Link>
       
-      <h1 style={{ marginTop: "20px" }}>{blog.title}</h1>
-      <p><strong>Autor:</strong> {blog.author}</p>
-      <p>
-        <strong>URL Original:</strong>{" "}
-        <a href={blog.url} target="_blank" rel="noopener noreferrer">
-          {blog.url}
-        </a>
+      <p style={{ marginTop: "20px", whiteSpace: "pre-wrap", fontSize: "1.2rem" }}>
+        {blog.content}
       </p>
       
-      <div style={{ margin: "20px 0", padding: "15px", background: "#f5f5f5", borderRadius: "5px", color: "#333" }}>
-        <p><strong>Me gusta actuales:</strong> {blog.likes}</p>
+      <div style={{ margin: "20px 0", padding: "15px", background: "#1e1e1e", border: "1px solid #444", borderRadius: "5px" }}>
+        <p><strong>Estado:</strong> {blog.important ? '⭐ Importante' : 'Normal'}</p>
         
-        <form action={handleLikeBlog}>
-          <input type="hidden" name="id" value={blog.id} />
+        <form action={handleToggle}>
           <button
             type="submit"
             style={{
@@ -52,7 +53,7 @@ export default async function BlogDetailPage({
               fontSize: "16px"
             }}
           >
-            👍 Dar Me gusta
+            Cambiar importancia
           </button>
         </form>
       </div>
