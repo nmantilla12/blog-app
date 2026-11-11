@@ -18,3 +18,6 @@ export default function RootLayout({
     </html>
   )
 }
+<nav style={{ marginBottom: "20px" }}>
+  <Link href="/">Inicio</Link> | <Link href="/blogs">Blogs</Link> | <Link href="/users">Users</Link>
+</nav>

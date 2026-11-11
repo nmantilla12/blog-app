@@ -26,6 +26,7 @@
     "eslint-config-next": "16.4.3",
     "postgres": "^3.4.9",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }
