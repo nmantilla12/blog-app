@@ -34,11 +34,11 @@ export async function createBlog(formData: FormData) {
     return
   }
 
-  // Insertamos en la tabla de Postgres a través de Drizzle (asignando un usuario por defecto si es necesario)
+  // Insertamos en la tabla de Postgres a través de Drizzle (asociado al usuario por defecto para pruebas)
   await db.insert(blogs).values({
     content,
     important,
-    userId: 1, // Asociado por defecto al usuario 1 (Matti) para pruebas
+    userId: 1, 
   })
 
   revalidatePath('/blogs')
