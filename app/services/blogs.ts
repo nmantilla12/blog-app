@@ -2,23 +2,30 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { db } from '@/app/db'
-import { notes } from '@/app/db/schema'
+import { db } from "@/app/db"
+import { blogs } from "@/app/db/schema"
+import { eq } from 'drizzle-orm'
 
-// 1. Tipado que refleja la tabla de la base de datos
-export interface Note {
+// 1. Tipado que refleja la tabla de blogs en la base de datos
+export interface Blog {
   id: number
   content: string
   important: boolean
+  userId?: number | null
 }
 
-// 2. Obtener todas las notas de la base de datos
-export const getBlogs = async (): Promise<Note[]> => {
-  const allNotes = await db.select().from(notes)
-  return allNotes
+// 2. Obtener todos los blogs de la base de datos
+export const getBlogs = async (): Promise<Blog[]> => {
+  const allBlogs = await db.select().from(blogs)
+  return allBlogs
 }
 
-// 3. Crear una nueva nota en la base de datos
+// 3. Obtener los blogs escritos por un usuario específico
+export const getBlogsByUserId = async (userId: number) => {
+  return await db.select().from(blogs).where(eq(blogs.userId, userId))
+}
+
+// 4. Crear un nuevo blog en la base de datos
 export async function createBlog(formData: FormData) {
   const content = formData.get('content') as string
   const important = formData.get('important') === 'true'
@@ -27,13 +34,13 @@ export async function createBlog(formData: FormData) {
     return
   }
 
-  // Insertamos en la tabla de Postgres a través de Drizzle
-  await db.insert(notes).values({
+  // Insertamos en la tabla de Postgres a través de Drizzle (asignando un usuario por defecto si es necesario)
+  await db.insert(blogs).values({
     content,
     important,
+    userId: 1, // Asociado por defecto al usuario 1 (Matti) para pruebas
   })
 
-  // Revalidamos la ruta para que Next.js actualice la lista y redirigimos
   revalidatePath('/blogs')
   redirect('/blogs')
 }
