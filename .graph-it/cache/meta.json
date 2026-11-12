@@ -1,9 +1,9 @@
 {
   "schema": 2,
-  "version": "1.22.0",
-  "savedAt": "2026-11-11T19:35:52.844Z",
+  "version": "1.24.2",
+  "savedAt": "2026-11-12T14:06:29.728Z",
   "workspaceRoot": "c:\\Users\\illop\\blog-app",
-  "configFingerprint": "6eb1456f489b8f912251844e1769bd3128b94b4a2f4cbd7878a1ae6f3ea87b69",
+  "configFingerprint": "c49e1943de2d4a1efd4e6c97313c1ae22c4539316cfa71601443feeda9ab0567",
   "reverseIndexOptions": {
     "excludeNodeModules": true,
     "ignoreTypeImports": false
