@@ -1,6 +1,6 @@
-import { db } from '@/app/db'
-import { users } from '@/app/db/schema'
-import Link from 'next/link'
+import { db } from "@/app/db"
+import { users } from "@/app/db/schema"
+import Link from "next/link"
 
 export default async function UsersPage() {
   const allUsers = await db.select().from(users)
@@ -19,8 +19,8 @@ export default async function UsersPage() {
                 <p className="font-bold text-lg">{user.name}</p>
                 <p className="text-gray-500 text-sm">@{user.username}</p>
               </div>
-              <Link 
-                href={`/users/${user.username}`} 
+              <Link
+                href={`/users/${user.username}`}
                 className="text-blue-600 hover:underline font-medium"
               >
                 Ver perfil →
