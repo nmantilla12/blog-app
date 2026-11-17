@@ -1,7 +1,10 @@
-import { getBlogById, toggleBlogImportance } from "@/app/services/blogs"
+import { db } from "@/app/db"
+import { blogs, users, readingList } from "@/app/db/schema"
+import { eq, and } from "drizzle-orm"
+import { auth } from "@/auth"
+import { addToReadingList } from "@/app/actions/blogs"
 import Link from "next/link"
-
-export const dynamic = 'force-dynamic'
+import { revalidatePath } from "next/cache"
 
 export default async function BlogDetailPage({
   params,
@@ -9,54 +12,120 @@ export default async function BlogDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const blog = await getBlogById(Number(id))
+  const blogId = Number(id)
+
+  const blog = await db.query.blogs.findFirst({
+    where: eq(blogs.id, blogId),
+  })
 
   if (!blog) {
     return (
-      <div style={{ padding: "20px", fontFamily: "sans-serif", color: "#fff" }}>
+      <div style={{ padding: "20px", fontFamily: "sans-serif", color: "#333" }}>
         <h2>Blog no encontrado</h2>
         <Link href="/blogs">← Volver a la lista</Link>
       </div>
     )
   }
 
-  const blogId = blog.id
+  const session = await auth()
+  let isInReadingList = false
 
-  async function handleToggle() {
+  if (session?.user?.email) {
+    const dbUser = await db.query.users.findFirst({
+      where: eq(users.username, session.user.email),
+    })
+
+    if (dbUser) {
+      const existing = await db.query.readingList.findFirst({
+        where: and(eq(readingList.userId, dbUser.id), eq(readingList.blogId, blog.id)),
+      })
+      isInReadingList = !!existing
+    }
+  }
+
+  async function handleLike() {
     'use server'
-    await toggleBlogImportance(blogId)
+    const currentLikes = blog.likes ?? 0
+    await db.update(blogs)
+      .set({ likes: currentLikes + 1 })
+      .where(eq(blogs.id, blog.id))
+    revalidatePath(`/blogs/${blog.id}`)
+  }
+
+  async function handleAddToReadingList() {
+    'use server'
+    await addToReadingList(blog.id)
   }
 
   return (
-    <div style={{ padding: "20px", fontFamily: "sans-serif", color: "#fff" }}>
-      <Link href="/blogs" style={{ color: "#61dafb", textDecoration: "none" }}>
+    <div style={{ padding: "20px", fontFamily: "sans-serif", maxWidth: "800px", margin: "0 auto" }}>
+      <Link href="/blogs" style={{ color: "#0070f3", textDecoration: "none" }}>
         ← Volver a la lista de blogs
       </Link>
       
-      <p style={{ marginTop: "20px", whiteSpace: "pre-wrap", fontSize: "1.2rem" }}>
-        {blog.content}
-      </p>
-      
-      <div style={{ margin: "20px 0", padding: "15px", background: "#1e1e1e", border: "1px solid #444", borderRadius: "5px" }}>
-        <p><strong>Estado:</strong> {blog.important ? '⭐ Importante' : 'Normal'}</p>
+      <h1 style={{ marginTop: "20px", fontSize: "2rem" }}>{blog.title}</h1>
+      <p style={{ color: "#666", fontSize: "1rem" }}>por {blog.author}</p>
+
+      {blog.url && (
+        <p style={{ marginTop: "10px" }}>
+          <a href={blog.url} target="_blank" rel="noopener noreferrer" style={{ color: "#0070f3" }}>
+            {blog.url}
+          </a>
+        </p>
+      )}
+
+      {/* Sección de Likes y Botón de Lista de Lectura */}
+      <div style={{ display: "flex", alignItems: "center", gap: "15px", margin: "20px 0", padding: "10px 0", borderTop: "1px solid #eee", borderBottom: "1px solid #eee" }}>
+        <span style={{ fontSize: "1rem", fontWeight: "bold" }}>
+          likes: {blog.likes ?? 0}
+        </span>
         
-        <form action={handleToggle}>
+        <form action={handleLike}>
           <button
             type="submit"
             style={{
-              padding: "10px 15px",
-              backgroundColor: "#0070f3",
+              padding: "6px 16px",
+              backgroundColor: "#2563eb",
               color: "white",
               border: "none",
-              borderRadius: "5px",
+              borderRadius: "4px",
               cursor: "pointer",
-              fontSize: "16px"
+              fontWeight: "bold",
+              fontSize: "14px"
             }}
           >
-            Cambiar importancia
+            like
           </button>
         </form>
+
+        {session && (
+          isInReadingList ? (
+            <span style={{ color: "#16a34a", fontStyle: "italic", fontWeight: "bold" }}>✓ En lista de lectura</span>
+          ) : (
+            <form action={handleAddToReadingList}>
+              <button
+                type="submit"
+                style={{
+                  padding: "6px 16px",
+                  backgroundColor: "#16a34a",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontWeight: "bold",
+                  fontSize: "14px"
+                }}
+              >
+                add to reading list
+              </button>
+            </form>
+          )
+        )}
       </div>
+
+      <p style={{ marginTop: "20px", whiteSpace: "pre-wrap", fontSize: "1.1rem", lineHeight: "1.6" }}>
+        {blog.content}
+      </p>
     </div>
   )
 }
