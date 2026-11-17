@@ -15,7 +15,8 @@ async function BlogsContent({
 
   const filteredBlogs = filter
     ? blogs.filter((blog) =>
-        blog.content.toLowerCase().includes(filter.toLowerCase())
+        blog.content.toLowerCase().includes(filter.toLowerCase()) ||
+        blog.title.toLowerCase().includes(filter.toLowerCase())
       )
     : blogs
 
@@ -35,7 +36,7 @@ async function BlogsContent({
         </button>
       </form>
 
-      {/* Lista de notas desde la base de datos */}
+      {/* Lista de blogs desde la base de datos */}
       <ul style={{ listStyle: "none", padding: 0 }}>
         {filteredBlogs.map((blog) => (
           <li
@@ -44,12 +45,16 @@ async function BlogsContent({
               border: "1px solid #ddd",
               padding: "15px",
               marginBottom: "10px",
-              borderRadius: "5px"
+              borderRadius: "5px",
+              backgroundColor: "#fff"
             }}
           >
             <Link href={`/blogs/${blog.id}`} style={{ color: "inherit", textDecoration: "none" }}>
-              <p><strong>Contenido:</strong> {blog.content}</p>
-              <p><strong>Importante:</strong> {blog.important ? "Sí" : "No"}</p>
+              <p style={{ fontSize: "1.2rem", fontWeight: "bold", marginBottom: "5px", color: "#0070f3" }}>
+                {blog.title}
+              </p>
+              <p style={{ marginBottom: "5px" }}><strong>Contenido:</strong> "{blog.content}"</p>
+              <p style={{ fontSize: "0.9rem", color: "#666" }}><strong>Autor:</strong> {blog.author}</p>
             </Link>
           </li>
         ))}
@@ -64,7 +69,7 @@ export default function BlogsPage({
   searchParams: Promise<{ filter?: string }>
 }) {
   return (
-    <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
+    <div style={{ padding: "20px", fontFamily: "sans-serif", maxWidth: "800px", margin: "0 auto" }}>
       <div style={{ marginBottom: "20px" }}>
         <Link href="/" style={{ marginRight: "15px", color: "#0070f3" }}>Inicio</Link>
         <span>|</span>
@@ -75,7 +80,7 @@ export default function BlogsPage({
 
       <h1>Lista de Notas / Blogs</h1>
 
-      {/* Envolvemos el componente con Suspense para satisfacer el requisito de Next.js */}
+      {/* Envolvemos el componente con Suspense para cumplir con Next.js */}
       <Suspense fallback={<p>Cargando notas y filtros...</p>}>
         <BlogsContent searchParams={searchParams} />
       </Suspense>
