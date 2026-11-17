@@ -10,6 +10,7 @@ import { eq } from "drizzle-orm"
 export const createBlog = async (
   prevState: { 
     error?: string; 
+    success?: boolean;
     values?: { title: string; author: string; url: string; content: string } 
   },
   formData: FormData
@@ -29,16 +30,16 @@ export const createBlog = async (
 
   // 2. Validaciones independientes
   if (title.length < 5) {
-    return { error: "Title must be at least 5 characters long", values }
+    return { error: "Title must be at least 5 characters long", success: false, values }
   }
   if (author.length < 5) {
-    return { error: "Author must be at least 5 characters long", values }
+    return { error: "Author must be at least 5 characters long", success: false, values }
   }
   if (url.length < 5) {
-    return { error: "URL must be at least 5 characters long", values }
+    return { error: "URL must be at least 5 characters long", success: false, values }
   }
   if (content.length < 5) {
-    return { error: "Content must be at least 5 characters long", values }
+    return { error: "Content must be at least 5 characters long", success: false, values }
   }
 
   // 3. Buscamos el usuario en la base de datos
@@ -60,5 +61,6 @@ export const createBlog = async (
   })
 
   revalidatePath("/blogs")
-  redirect("/blogs")
+  
+  return { error: "", success: true, values }
 }
