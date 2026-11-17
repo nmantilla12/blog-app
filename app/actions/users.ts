@@ -5,6 +5,8 @@ import bcrypt from "bcryptjs"
 import { db } from "@/app/db"
 import { users } from "@/app/db/schema"
 import { eq } from "drizzle-orm"
+import { auth } from "@/auth"
+import { revalidatePath } from "next/cache"
 
 export const registerUser = async (
   prevState: { error?: string; values?: { username: string; name: string } },
@@ -53,4 +55,28 @@ export const registerUser = async (
 
   // Redirigimos al login al terminar
   redirect("/login")
+}
+
+// ==========================================
+// NUEVA FUNCIÓN: Generar Token de API
+// ==========================================
+export async function generateToken() {
+  // 1. Comprobamos que hay una sesión activa en el servidor
+  const session = await auth()
+  
+  if (!session || !session.user) {
+    throw new Error("Unauthorized")
+  }
+
+  // 2. Generamos una cadena aleatoria y única usando la herramienta nativa crypto de Node.js
+  const newToken = crypto.randomUUID()
+
+  // 3. Actualizamos la base de datos guardando el token al usuario actual
+  await db
+    .update(users)
+    .set({ token: newToken })
+    .where(eq(users.username, session.user.email!))
+
+  // 4. Forzamos a Next.js a actualizar la página /me para que el token se vea al momento
+  revalidatePath("/me")
 }
