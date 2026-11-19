@@ -96,3 +96,17 @@ export const addToReadingList = async (blogId: number) => {
   revalidatePath(`/blogs/${blogId}`)
   revalidatePath("/me")
 }
+
+// 🚀 Añadimos esta Server Action que faltaba para marcar como leído
+export const markAsRead = async (readingListItemId: number) => {
+  const session = await auth()
+  if (!session?.user?.email) {
+    redirect("/login")
+  }
+
+  await db.update(readingList)
+    .set({ read: true })
+    .where(eq(readingList.id, readingListItemId))
+
+  revalidatePath("/me")
+}

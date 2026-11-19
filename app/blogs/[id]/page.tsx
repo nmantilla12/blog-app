@@ -5,6 +5,9 @@ import { auth } from "@/auth"
 import { addToReadingList } from "@/app/actions/blogs"
 import Link from "next/link"
 import { revalidatePath } from "next/cache"
+import LikeButton from "./LikeButton"
+
+export const instant = false
 
 export default async function BlogDetailPage({
   params,
@@ -13,6 +16,15 @@ export default async function BlogDetailPage({
 }) {
   const { id } = await params
   const blogId = Number(id)
+
+  if (!Number.isInteger(blogId) || blogId <= 0) {
+    return (
+      <div style={{ padding: "20px", fontFamily: "sans-serif", color: "#333" }}>
+        <h2>Blog no encontrado</h2>
+        <Link href="/blogs">← Volver a la lista</Link>
+      </div>
+    )
+  }
 
   const blog = await db.query.blogs.findFirst({
     where: eq(blogs.id, blogId),
@@ -27,6 +39,8 @@ export default async function BlogDetailPage({
     )
   }
 
+  const currentBlogId = blog.id
+  const currentLikes = blog.likes ?? 0
   const session = await auth()
   let isInReadingList = false
 
@@ -37,24 +51,37 @@ export default async function BlogDetailPage({
 
     if (dbUser) {
       const existing = await db.query.readingList.findFirst({
-        where: and(eq(readingList.userId, dbUser.id), eq(readingList.blogId, blog.id)),
+        where: and(
+          eq(readingList.userId, dbUser.id),
+          eq(readingList.blogId, currentBlogId)
+        ),
       })
       isInReadingList = !!existing
     }
   }
 
-  async function handleLike() {
-    'use server'
-    const currentLikes = blog.likes ?? 0
-    await db.update(blogs)
-      .set({ likes: currentLikes + 1 })
-      .where(eq(blogs.id, blog.id))
-    revalidatePath(`/blogs/${blog.id}`)
+  async function incrementBlogLike(targetBlogId: number) {
+    "use server"
+    const latest = await db.query.blogs.findFirst({
+      where: eq(blogs.id, targetBlogId),
+    })
+    const nextLikes = (latest?.likes ?? 0) + 1
+
+    await db
+      .update(blogs)
+      .set({ likes: nextLikes })
+      .where(eq(blogs.id, targetBlogId))
+
+    revalidatePath(`/blogs/${targetBlogId}`)
+    revalidatePath("/blogs")
+    return nextLikes
   }
 
   async function handleAddToReadingList() {
-    'use server'
-    await addToReadingList(blog.id)
+    "use server"
+    await addToReadingList(currentBlogId)
+    revalidatePath(`/blogs/${currentBlogId}`)
+    revalidatePath("/me")
   }
 
   return (
@@ -62,7 +89,7 @@ export default async function BlogDetailPage({
       <Link href="/blogs" style={{ color: "#0070f3", textDecoration: "none" }}>
         ← Volver a la lista de blogs
       </Link>
-      
+
       <h1 style={{ marginTop: "20px", fontSize: "2rem" }}>{blog.title}</h1>
       <p style={{ color: "#666", fontSize: "1rem" }}>por {blog.author}</p>
 
@@ -76,31 +103,17 @@ export default async function BlogDetailPage({
 
       {/* Sección de Likes y Botón de Lista de Lectura */}
       <div style={{ display: "flex", alignItems: "center", gap: "15px", margin: "20px 0", padding: "10px 0", borderTop: "1px solid #eee", borderBottom: "1px solid #eee" }}>
-        <span style={{ fontSize: "1rem", fontWeight: "bold" }}>
-          likes: {blog.likes ?? 0}
-        </span>
-        
-        <form action={handleLike}>
-          <button
-            type="submit"
-            style={{
-              padding: "6px 16px",
-              backgroundColor: "#2563eb",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontWeight: "bold",
-              fontSize: "14px"
-            }}
-          >
-            like
-          </button>
-        </form>
+        <LikeButton
+          blogId={currentBlogId}
+          initialLikes={currentLikes}
+          onLike={incrementBlogLike}
+        />
 
         {session && (
           isInReadingList ? (
-            <span style={{ color: "#16a34a", fontStyle: "italic", fontWeight: "bold" }}>✓ En lista de lectura</span>
+            <span style={{ color: "#16a34a", fontStyle: "italic", fontWeight: "bold" }}>
+              ✓ En lista de lectura
+            </span>
           ) : (
             <form action={handleAddToReadingList}>
               <button
@@ -113,7 +126,7 @@ export default async function BlogDetailPage({
                   borderRadius: "4px",
                   cursor: "pointer",
                   fontWeight: "bold",
-                  fontSize: "14px"
+                  fontSize: "14px",
                 }}
               >
                 add to reading list

@@ -17,6 +17,7 @@ export const blogs = pgTable("blogs", {
   author: text("author").notNull(),
   url: text("url").notNull(),
   content: text("content").notNull(),
+  likes: integer("likes").default(0).notNull(),
   userId: integer("user_id").references(() => users.id),
 })
 

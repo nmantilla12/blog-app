@@ -3,6 +3,7 @@ import { db } from "@/app/db"
 import { users, readingList } from "@/app/db/schema"
 import { eq } from "drizzle-orm"
 import { generateToken } from "@/app/actions/users"
+import { markAsRead } from "@/app/actions/blogs"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { Suspense } from "react"
@@ -29,6 +30,10 @@ async function ProfileContent() {
     },
   })
 
+  // Filtramos entre no leídos (Unread) y leídos (Read)
+  const unreadItems = userReadingList.filter((item) => !item.read)
+  const readItems = userReadingList.filter((item) => item.read)
+
   return (
     <div style={{ border: "1px solid #ddd", padding: "30px", borderRadius: "8px", backgroundColor: "#fff" }}>
       <h1 style={{ marginBottom: "20px", fontSize: "1.8rem" }}>My Profile</h1>
@@ -42,21 +47,60 @@ async function ProfileContent() {
 
       <h2 style={{ fontSize: "1.4rem", marginBottom: "15px" }}>Reading List</h2>
       
-      {userReadingList.length === 0 ? (
-        <p style={{ color: "#666", marginBottom: "20px" }}>Tu lista de lectura está vacía.</p>
+      {/* Sección UNREAD */}
+      <h3 style={{ fontSize: "1.2rem", color: "#333", marginTop: "15px" }}>Unread ({unreadItems.length})</h3>
+      {unreadItems.length === 0 ? (
+        <p style={{ color: "#666", marginBottom: "15px" }}>No hay blogs pendientes en tu lista de lectura.</p>
       ) : (
-        <ul style={{ marginBottom: "25px", paddingLeft: "20px" }}>
-          {userReadingList.map((item) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
+          {unreadItems.map((item) => (
             item.blog && (
-              <li key={item.id} style={{ marginBottom: "10px" }}>
-                <Link href={`/blogs/${item.blog.id}`} style={{ color: "#0070f3", textDecoration: "underline", fontSize: "1.1rem" }}>
+              <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fef9c3", padding: "10px 15px", borderRadius: "6px", border: "1px solid #fde047" }}>
+                <Link href={`/blogs/${item.blog.id}`} style={{ color: "#0070f3", textDecoration: "none", fontWeight: "500", fontSize: "1.1rem" }}>
                   {item.blog.title}
                 </Link>
-                <span style={{ color: "#666", marginLeft: "8px" }}>by {item.blog.author}</span>
-              </li>
+                <form action={async () => {
+                  'use server'
+                  await markAsRead(item.id)
+                }}>
+                  <button
+                    type="submit"
+                    style={{
+                      backgroundColor: "#16a34a",
+                      color: "white",
+                      border: "none",
+                      padding: "6px 12px",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                      fontSize: "13px"
+                    }}
+                  >
+                    mark as read
+                  </button>
+                </form>
+              </div>
             )
           ))}
-        </ul>
+        </div>
+      )}
+
+      {/* Sección READ */}
+      <h3 style={{ fontSize: "1.2rem", color: "#333", marginTop: "25px" }}>Read ({readItems.length})</h3>
+      {readItems.length === 0 ? (
+        <p style={{ color: "#666", marginBottom: "20px" }}>No hay blogs marcados como leídos todavía.</p>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "25px" }}>
+          {readItems.map((item) => (
+            item.blog && (
+              <div key={item.id} style={{ background: "#dcfce7", padding: "10px 15px", borderRadius: "6px", border: "1px solid #bbf7d0" }}>
+                <Link href={`/blogs/${item.blog.id}`} style={{ color: "#166534", textDecoration: "none", fontWeight: "500", fontSize: "1.1rem" }}>
+                  {item.blog.title}
+                </Link>
+              </div>
+            )
+          ))}
+        </div>
       )}
 
       <hr style={{ border: "0", borderTop: "1px solid #ccc", margin: "20px 0" }} />
