@@ -8,10 +8,10 @@ import { blogs, users, readingList } from "@/app/db/schema"
 import { eq, and } from "drizzle-orm"
 
 export const createBlog = async (
-  prevState: { 
-    error?: string; 
-    success?: boolean;
-    values?: { title: string; author: string; url: string; content: string } 
+  prevState: {
+    error?: string
+    success?: boolean
+    values?: { title: string; author: string; url: string; content: string }
   },
   formData: FormData
 ) => {
@@ -48,13 +48,16 @@ export const createBlog = async (
     redirect("/login")
   }
 
-  const [newBlog] = await db.insert(blogs).values({
-    title,
-    author,
-    url,
-    content,
-    userId: dbUser.id,
-  }).returning()
+  const [newBlog] = await db
+    .insert(blogs)
+    .values({
+      title,
+      author,
+      url,
+      content,
+      userId: dbUser.id,
+    })
+    .returning()
 
   if (newBlog) {
     await db.insert(readingList).values({
@@ -64,7 +67,8 @@ export const createBlog = async (
   }
 
   revalidatePath("/blogs")
-  
+  revalidatePath("/me")
+
   return { error: "", success: true, values }
 }
 
@@ -89,7 +93,7 @@ export const addToReadingList = async (blogId: number) => {
   if (!existing) {
     await db.insert(readingList).values({
       userId: dbUser.id,
-      blogId: blogId,
+      blogId,
     })
   }
 
@@ -97,16 +101,29 @@ export const addToReadingList = async (blogId: number) => {
   revalidatePath("/me")
 }
 
-// 🚀 Añadimos esta Server Action que faltaba para marcar como leído
 export const markAsRead = async (readingListItemId: number) => {
   const session = await auth()
   if (!session?.user?.email) {
     redirect("/login")
   }
 
-  await db.update(readingList)
+  const dbUser = await db.query.users.findFirst({
+    where: eq(users.username, session.user.email),
+  })
+
+  if (!dbUser) {
+    redirect("/login")
+  }
+
+  await db
+    .update(readingList)
     .set({ read: true })
-    .where(eq(readingList.id, readingListItemId))
+    .where(
+      and(
+        eq(readingList.id, readingListItemId),
+        eq(readingList.userId, dbUser.id)
+      )
+    )
 
   revalidatePath("/me")
 }
