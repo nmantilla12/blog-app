@@ -42,7 +42,7 @@ jobs:
           echo "ALLOW_TEST_RESET is set: true"
 
       - name: Run database migrations
-        run: npx drizzle-kit push
+        run: NODE_ENV=test npx drizzle-kit push
 
       - name: Run Playwright tests
         run: npx playwright test
