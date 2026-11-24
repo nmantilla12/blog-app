@@ -1,0 +1,61 @@
+name: End-to-End Tests
+
+on:
+  push:
+    branches: [ principal, main, master, part8 ]
+  pull_request:
+    branches: [ principal, main, master, part8 ]
+
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Set up environment file
+        run: |
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env.test
+          echo "AUTH_SECRET=${{ secrets.AUTH_SECRET || secrets.NEXTAUTH_SECRET }}" >> .env.test
+          echo "NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}" >> .env.test
+          echo "ALLOW_TEST_RESET=true" >> .env.test
+          echo "NODE_ENV=test" >> .env.test
+
+      - name: Verify environment setup
+        run: |
+          echo "Checking .env.test file:"
+          cat .env.test | sed 's/=.*/=***/'
+          echo ""
+          echo "DATABASE_URL secret exists: ${{ secrets.DATABASE_URL != '' }}"
+          echo "AUTH_SECRET/NEXTAUTH_SECRET exists: ${{ secrets.AUTH_SECRET != '' || secrets.NEXTAUTH_SECRET != '' }}"
+          echo "ALLOW_TEST_RESET is set: true"
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: NODE_ENV=test npx drizzle-kit push
+
+      - name: Run Playwright tests
+        run: |
+          set -a
+          . ./.env.test
+          set +a
+          npx playwright test
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30

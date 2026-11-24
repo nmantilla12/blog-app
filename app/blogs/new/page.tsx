@@ -47,10 +47,11 @@ export default function NewBlogPage() {
 
       <form action={formAction} style={{ display: "flex", flexDirection: "column", gap: "1.2rem" }}>
         <div>
-          <label style={{ display: "block", marginBottom: "0.4rem", fontWeight: "600" }}>
+          <label htmlFor="title" style={{ display: "block", marginBottom: "0.4rem", fontWeight: "600" }}>
             Title
           </label>
           <input
+            id="title"
             type="text"
             name="title"
             defaultValue={state.values?.title}
@@ -59,10 +60,11 @@ export default function NewBlogPage() {
         </div>
 
         <div>
-          <label style={{ display: "block", marginBottom: "0.4rem", fontWeight: "600" }}>
+          <label htmlFor="author" style={{ display: "block", marginBottom: "0.4rem", fontWeight: "600" }}>
             Author
           </label>
           <input
+            id="author"
             type="text"
             name="author"
             defaultValue={state.values?.author}
@@ -71,10 +73,11 @@ export default function NewBlogPage() {
         </div>
 
         <div>
-          <label style={{ display: "block", marginBottom: "0.4rem", fontWeight: "600" }}>
+          <label htmlFor="url" style={{ display: "block", marginBottom: "0.4rem", fontWeight: "600" }}>
             URL
           </label>
           <input
+            id="url"
             type="text"
             name="url"
             defaultValue={state.values?.url}
@@ -83,10 +86,11 @@ export default function NewBlogPage() {
         </div>
 
         <div>
-          <label style={{ display: "block", marginBottom: "0.4rem", fontWeight: "600" }}>
+          <label htmlFor="content" style={{ display: "block", marginBottom: "0.4rem", fontWeight: "600" }}>
             Content
           </label>
           <textarea
+            id="content"
             name="content"
             defaultValue={state.values?.content}
             rows={4}
@@ -96,9 +100,10 @@ export default function NewBlogPage() {
 
         <button
           type="submit"
+          data-testid="create-blog-button"
           style={{ padding: "0.75rem 1.5rem", backgroundColor: "#0070f3", color: "#fff", border: "none", borderRadius: "4px", fontSize: "1rem", cursor: "pointer", fontWeight: "600", marginTop: "0.5rem" }}
         >
-          Crear blog
+          Create
         </button>
       </form>
     </div>

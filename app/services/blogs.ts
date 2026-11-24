@@ -9,8 +9,11 @@ import { eq } from 'drizzle-orm'
 // 1. Tipado que refleja la tabla de blogs en la base de datos
 export interface Blog {
   id: number
+  title: string
+  author: string
+  url: string
   content: string
-  important: boolean
+  likes: number
   userId?: number | null
 }
 
@@ -27,18 +30,23 @@ export const getBlogsByUserId = async (userId: number) => {
 
 // 4. Crear un nuevo blog en la base de datos
 export async function createBlog(formData: FormData) {
-  const content = formData.get('content') as string
-  const important = formData.get('important') === 'true'
+  const title = (formData.get('title') as string) || 'Untitled'
+  const author = (formData.get('author') as string) || 'Anonymous'
+  const url = (formData.get('url') as string) || ''
+  const content = (formData.get('content') as string) || ''
 
-  if (!content) {
+  if (!title.trim() && !content.trim()) {
     return
   }
 
-  // Insertamos en la tabla de Postgres a través de Drizzle (asociado al usuario por defecto para pruebas)
+  // Insertamos en la tabla de Postgres a través de Drizzle
   await db.insert(blogs).values({
+    title,
+    author,
+    url,
     content,
-    important,
-    userId: 1, 
+    likes: 0,
+    userId: 1,
   })
 
   revalidatePath('/blogs')
