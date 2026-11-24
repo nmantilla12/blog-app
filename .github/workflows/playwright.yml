@@ -2,9 +2,9 @@ name: End-to-End Tests
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ principal, main, master, part8 ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ principal, main, master, part8 ]
 
 jobs:
   test:
@@ -27,25 +27,19 @@ jobs:
       - name: Set up environment file
         run: |
           echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env.test
-          echo "NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}" >> .env.test
-          echo "NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }}" >> .env.test
+          echo "AUTH_SECRET=${{ secrets.AUTH_SECRET || secrets.NEXTAUTH_SECRET }}" >> .env.test
+          echo "NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}" >> .env.test
+          echo "ALLOW_TEST_RESET=true" >> .env.test
           echo "NODE_ENV=test" >> .env.test
 
       - name: Verify environment setup
         run: |
           echo "Checking .env.test file:"
-          cat .env.test | sed 's/=.*/=***/' 
+          cat .env.test | sed 's/=.*/=***/'
           echo ""
           echo "DATABASE_URL secret exists: ${{ secrets.DATABASE_URL != '' }}"
-          echo "NEXTAUTH_SECRET secret exists: ${{ secrets.NEXTAUTH_SECRET != '' }}"
-          echo "NEXTAUTH_URL secret exists: ${{ secrets.NEXTAUTH_URL != '' }}"
-          echo ""
-          echo "Checking if DATABASE_URL is loaded from file:"
-          if grep -q "DATABASE_URL=" .env.test; then
-            echo "✓ DATABASE_URL found in .env.test"
-          else
-            echo "✗ DATABASE_URL NOT found in .env.test"
-          fi
+          echo "AUTH_SECRET/NEXTAUTH_SECRET exists: ${{ secrets.AUTH_SECRET != '' || secrets.NEXTAUTH_SECRET != '' }}"
+          echo "ALLOW_TEST_RESET is set: true"
 
       - name: Run database migrations
         run: npx drizzle-kit push
