@@ -42,6 +42,8 @@ jobs:
           echo "ALLOW_TEST_RESET is set: true"
 
       - name: Run database migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: NODE_ENV=test npx drizzle-kit push
 
       - name: Run Playwright tests
