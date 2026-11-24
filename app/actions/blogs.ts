@@ -36,9 +36,6 @@ export const createBlog = async (
   if (url.length < 5) {
     return { error: "URL must be at least 5 characters long", success: false, values }
   }
-  if (content.length < 5) {
-    return { error: "Content must be at least 5 characters long", success: false, values }
-  }
 
   const dbUser = await db.query.users.findFirst({
     where: eq(users.username, session.user.email),

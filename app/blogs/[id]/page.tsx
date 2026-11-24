@@ -7,7 +7,7 @@ import Link from "next/link"
 import { revalidatePath } from "next/cache"
 import LikeButton from "./LikeButton"
 
-export const instant = false
+export const dynamic = "force-dynamic"
 
 export default async function BlogDetailPage({
   params,
@@ -85,13 +85,20 @@ export default async function BlogDetailPage({
   }
 
   return (
-    <div style={{ padding: "20px", fontFamily: "sans-serif", maxWidth: "800px", margin: "0 auto" }}>
+    <div
+      data-testid="blog-detail"
+      style={{ padding: "20px", fontFamily: "sans-serif", maxWidth: "800px", margin: "0 auto" }}
+    >
       <Link href="/blogs" style={{ color: "#0070f3", textDecoration: "none" }}>
         ← Volver a la lista de blogs
       </Link>
 
-      <h1 style={{ marginTop: "20px", fontSize: "2rem" }}>{blog.title}</h1>
-      <p style={{ color: "#666", fontSize: "1rem" }}>por {blog.author}</p>
+      <h1 data-testid="blog-title" style={{ marginTop: "20px", fontSize: "2rem" }}>
+        {blog.title}
+      </h1>
+      <p data-testid="blog-author" style={{ color: "#666", fontSize: "1rem" }}>
+        por {blog.author}
+      </p>
 
       {blog.url && (
         <p style={{ marginTop: "10px" }}>
@@ -101,7 +108,6 @@ export default async function BlogDetailPage({
         </p>
       )}
 
-      {/* Sección de Likes y Botón de Lista de Lectura */}
       <div style={{ display: "flex", alignItems: "center", gap: "15px", margin: "20px 0", padding: "10px 0", borderTop: "1px solid #eee", borderBottom: "1px solid #eee" }}>
         <LikeButton
           blogId={currentBlogId}
@@ -118,6 +124,7 @@ export default async function BlogDetailPage({
             <form action={handleAddToReadingList}>
               <button
                 type="submit"
+                data-testid="add-to-reading-list-button"
                 style={{
                   padding: "6px 16px",
                   backgroundColor: "#16a34a",

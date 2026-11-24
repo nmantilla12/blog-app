@@ -2,7 +2,6 @@ import { getBlogs } from "@/app/services/blogs"
 import Link from "next/link"
 import { Suspense } from "react"
 
-// Componente interno que maneja los datos y los searchParams
 async function BlogsContent({
   searchParams,
 }: {
@@ -22,22 +21,25 @@ async function BlogsContent({
 
   return (
     <>
-      {/* Formulario de búsqueda en la URL */}
       <form method="GET" style={{ marginBottom: "20px" }}>
         <input
           type="text"
           name="filter"
+          data-testid="filter-input"
           defaultValue={filter}
           placeholder="Buscar en el contenido..."
           style={{ padding: "8px", marginRight: "8px", width: "250px" }}
         />
-        <button type="submit" style={{ padding: "8px 16px", cursor: "pointer" }}>
+        <button
+          type="submit"
+          data-testid="search-button"
+          style={{ padding: "8px 16px", cursor: "pointer" }}
+        >
           Buscar
         </button>
       </form>
 
-      {/* Lista de blogs desde la base de datos */}
-      <ul style={{ listStyle: "none", padding: 0 }}>
+      <ul data-testid="blogs-list" style={{ listStyle: "none", padding: 0 }}>
         {filteredBlogs.map((blog) => (
           <li
             key={blog.id}
@@ -46,7 +48,7 @@ async function BlogsContent({
               padding: "15px",
               marginBottom: "10px",
               borderRadius: "5px",
-              backgroundColor: "#fff"
+              backgroundColor: "#fff",
             }}
           >
             <Link href={`/blogs/${blog.id}`} style={{ color: "inherit", textDecoration: "none" }}>
@@ -54,7 +56,9 @@ async function BlogsContent({
                 {blog.title}
               </p>
               <p style={{ marginBottom: "5px" }}><strong>Contenido:</strong> "{blog.content}"</p>
-              <p style={{ fontSize: "0.9rem", color: "#666" }}><strong>Autor:</strong> {blog.author}</p>
+              <p style={{ fontSize: "0.9rem", color: "#666" }}>
+                <strong>Autor:</strong> {blog.author} · {blog.likes ?? 0} likes
+              </p>
             </Link>
           </li>
         ))}
@@ -80,7 +84,6 @@ export default function BlogsPage({
 
       <h1>Lista de Notas / Blogs</h1>
 
-      {/* Envolvemos el componente con Suspense para cumplir con Next.js */}
       <Suspense fallback={<p>Cargando notas y filtros...</p>}>
         <BlogsContent searchParams={searchParams} />
       </Suspense>

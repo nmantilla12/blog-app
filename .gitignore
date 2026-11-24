@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright & graph-it artifacts
+/test-results/
+/playwright-report/
+/.graph-it/

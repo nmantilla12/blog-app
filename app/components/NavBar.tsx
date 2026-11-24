@@ -23,6 +23,8 @@ export default function NavBar() {
       {" | "}
       {session ? (
         <>
+          <Link href="/me">me</Link>
+          {" | "}
           <Link href="/blogs/new">create new</Link>
           {" | "}
           <em>{session.user?.name} logged in</em>{" "}

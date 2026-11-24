@@ -4,7 +4,10 @@ import { db } from "@/app/db"
 import { users } from "@/app/db/schema"
 
 export async function POST(request: NextRequest) {
-  if (process.env.NODE_ENV === "production") {
+  const isAllowed =
+    process.env.ALLOW_TEST_RESET === "true" || process.env.NODE_ENV !== "production"
+
+  if (!isAllowed) {
     return NextResponse.json(
       { error: "This endpoint is not available in production" },
       { status: 403 }

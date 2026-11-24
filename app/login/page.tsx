@@ -21,8 +21,9 @@ export default function LoginPage() {
     })
 
     if (result?.error) {
-      setError("Usuario o contraseña incorrectos")
+      setError("Invalid username or password")
     } else {
+      window.sessionStorage.setItem("justLoggedIn", "1")
       router.push("/")
       router.refresh()
     }
@@ -31,11 +32,15 @@ export default function LoginPage() {
   return (
     <div style={{ maxWidth: "400px", margin: "2rem auto" }}>
       <h2>Iniciar sesión</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && (
+        <p data-testid="error-message" style={{ color: "red" }}>
+          {error}
+        </p>
+      )}
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         <div>
           <label htmlFor="username" style={{ display: "block", marginBottom: "0.5rem" }}>
-            Usuario:
+            Username
           </label>
           <input
             id="username"
@@ -48,7 +53,7 @@ export default function LoginPage() {
         </div>
         <div>
           <label htmlFor="password" style={{ display: "block", marginBottom: "0.5rem" }}>
-            Contraseña:
+            Password
           </label>
           <input
             id="password"
@@ -59,8 +64,12 @@ export default function LoginPage() {
             style={{ width: "100%", padding: "0.5rem" }}
           />
         </div>
-        <button type="submit" style={{ padding: "0.5rem", cursor: "pointer" }}>
-          Entrar
+        <button
+          type="submit"
+          data-testid="login-button"
+          style={{ padding: "0.5rem", cursor: "pointer" }}
+        >
+          Login
         </button>
       </form>
     </div>
